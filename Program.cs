@@ -3,12 +3,14 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Microsoft.Extensions.Configuration;
+using QuietChatBot.Data;
+using QuietChatBot.Repositories;
 
 class Program
 {
     static async Task Main(string[] args)
     {
-        DatabaseConnection.Initialize();
+        DbInitializer.Initialize();
 
         var config = new ConfigurationBuilder()
             .AddJsonFile("appsettings.Local.json", optional: true)
@@ -45,13 +47,15 @@ class Program
         Update update,
         CancellationToken ct)
     {
-        if (update.Message is { Text: var text, Id: var id })
+        if (update.Message != null)
         {
-            await bot.SendMessage(
-                chatId: update.Message.Chat.Id,
-                text: $"Вы написали: {text}, {id}",
-                cancellationToken: ct
-            );
+            var messageRepository = new MessageRepository();
+            messageRepository.Add(new QuietChatBot.Models.Message()
+            {
+                ChatId = update.Message.Chat.Id,
+                UserId = update.Message.From.Id,
+                MessageSendDate = update.Message.Date
+            });
         }
     }
 

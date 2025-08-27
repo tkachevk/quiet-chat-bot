@@ -1,22 +1,18 @@
+namespace QuietChatBot.Data;
+
 using Microsoft.Data.Sqlite;
 
-public static class DatabaseConnection
+public static class DbInitializer
 {
-    private static string _connectionString = "Data source=quietchatbot.db";
-
-    public static SqliteConnection GetConnection() =>
-        new SqliteConnection(_connectionString);
-
     public static void Initialize()
     {
-        using var connection = GetConnection();
+        using var connection = Database.GetConnection();
         connection.Open();
 
         string initSqlQuery = @"
             CREATE TABLE IF NOT EXISTS Messages (
                 MessageId INTEGER PRIMARY KEY AUTOINCREMENT,
                 MessageSendDate TEXT NOT NULL,
-                Message TEXT NOT NULL,
                 ChatId INTEGER NOT NULL,
                 UserId INTEGER NOT NULL
             )
