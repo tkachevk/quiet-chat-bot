@@ -56,6 +56,8 @@ class Program
                 UserId = update.Message.From.Id,
                 MessageSendDate = update.Message.Date
             });
+
+            var messages = messageRepository.GetAll();
         }
     }
 
