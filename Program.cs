@@ -1,72 +1,44 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Microsoft.Extensions.Configuration;
 using QuietChatBot.Data;
-using QuietChatBot.Repositories;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using QuietChatBot.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 class Program
 {
     static async Task Main(string[] args)
     {
-        DbInitializer.Initialize();
+        var builder = Host.CreateApplicationBuilder(args);
 
-        var config = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.Local.json", optional: true)
-            .Build();
-
-        string? token = config["BotToken"];
-        if (string.IsNullOrWhiteSpace(token))
-            throw new InvalidOperationException("Bot token missing in configuration!");
-
-        var botClient = new TelegramBotClient(token);
-
-        using var cts = new CancellationTokenSource();
-
-        var receiverOptions = new ReceiverOptions
+        builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true);
+        builder.Services.Configure<AppConfig>(builder.Configuration);
+        
+        builder.Services.AddSingleton<ITelegramBotClient>(sp =>
         {
-            AllowedUpdates = Array.Empty<UpdateType>()
-        };
+            var cfg = sp.GetRequiredService<IOptions<AppConfig>>().Value;
+            return new TelegramBotClient(cfg.BotToken);
+        });
+        builder.Services.AddSingleton<BotService>();
+        builder.Services.AddSingleton<IUpdateHandler, BotUpdateHandler>();
+
+        var app = builder.Build();
+
+        DbInitializer.Initialize();
+        
+        var botClient = app.Services.GetRequiredService<ITelegramBotClient>();
+        var updateHandler = app.Services.GetRequiredService<IUpdateHandler>();
+
+        var cts = new CancellationTokenSource();
 
         botClient.StartReceiving(
-            HandleUpdateAsync,
-            HandleErrorAsync,
-            receiverOptions,
-            cts.Token
+            updateHandler: updateHandler,
+            receiverOptions: new ReceiverOptions(),
+            cancellationToken: cts.Token
         );
 
-        var me = await botClient.GetMe(cts.Token);
-        Console.WriteLine($"Bot @{me.Username} started...");
-
-        await Task.Delay(-1, cts.Token);
-    }
-
-    static async Task HandleUpdateAsync(
-        ITelegramBotClient bot,
-        Update update,
-        CancellationToken ct)
-    {
-        if (update.Message != null)
-        {
-            var messageRepository = new MessageRepository();
-            messageRepository.Add(new QuietChatBot.Models.Message()
-            {
-                ChatId = update.Message.Chat.Id,
-                UserId = update.Message.From.Id,
-                MessageSendDate = update.Message.Date
-            });
-
-            var messages = messageRepository.GetAll();
-        }
-    }
-
-    static Task HandleErrorAsync(
-        ITelegramBotClient bot,
-        Exception ex,
-        CancellationToken ct)
-    {
-        Console.WriteLine($"Error: {ex.Message}");
-        return Task.CompletedTask;
+        await app.RunAsync();
     }
 }
