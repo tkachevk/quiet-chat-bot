@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using QuietChatBot.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using QuietChatBot.Repositories;
 
 class Program
 {
@@ -23,6 +24,8 @@ class Program
         });
         builder.Services.AddSingleton<BotService>();
         builder.Services.AddSingleton<IUpdateHandler, BotUpdateHandler>();
+        builder.Services.AddScoped<LimitRepository>();
+        builder.Services.AddScoped<MessageRepository>();
 
         var app = builder.Build();
 

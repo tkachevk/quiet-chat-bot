@@ -11,11 +11,20 @@ public class BotService
 {
     private readonly ITelegramBotClient _bot;
     private readonly AppConfig _config;
+    private readonly LimitRepository _limitRepository;
+    private readonly MessageRepository _messageRepository;
 
-    public BotService(ITelegramBotClient bot, IOptions<AppConfig> options)
+    public BotService(
+        ITelegramBotClient bot,
+        IOptions<AppConfig> options,
+        LimitRepository limitRepository,
+        MessageRepository messageRepository
+    )
     {
         _config = options.Value;
         _bot = bot;
+        _limitRepository = limitRepository;
+        _messageRepository = messageRepository;
     }
 
     public async Task HandleUpdateAsync(
@@ -34,20 +43,18 @@ public class BotService
                     UserId = update.Message.From.Id,
                     Count = Int32.Parse(count[1])
                 };
-                var limitRepository = new LimitRepository();
-                limitRepository.Add(newLimit);
+                _limitRepository.Add(newLimit);
             }
             else
             {
-                var messageRepository = new MessageRepository();
-                messageRepository.Add(new QuietChatBot.Models.Message()
+                _messageRepository.Add(new Models.Message()
                 {
                     ChatId = update.Message.Chat.Id,
                     UserId = update.Message.From.Id,
                     MessageSendDate = update.Message.Date
                 });
 
-                var messages = messageRepository.GetAll();
+                var messages = _messageRepository.GetAll();
 
                 var today = DateTime.Today;
                 var tommorrow = today.AddDays(1);
@@ -61,8 +68,7 @@ public class BotService
 
                 var userTodayMessagesCount = userTodayMessages.Count();
 
-                var limitRepository = new LimitRepository();
-                var limits = limitRepository.GetAll();
+                var limits = _limitRepository.GetAll();
                 var currentUserLimit = limits
                     .Where(m => m.ChatId == update.Message.Chat.Id
                         && m.UserId == update.Message.From.Id).LastOrDefault();
