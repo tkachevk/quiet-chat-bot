@@ -15,7 +15,14 @@ public static class DbInitializer
                 MessageSendDate TEXT NOT NULL,
                 ChatId INTEGER NOT NULL,
                 UserId INTEGER NOT NULL
-            )
+            );
+
+            CREATE TABLE IF NOT EXISTS Limits (
+                LimitId INTEGER PRIMARY KEY AUTOINCREMENT,
+                ChatId INTEGER NOT NULL,
+                UserId INTEGER NOT NULL,
+                Count INTEGER NOT NULL
+            );
         ";
 
         using var cmd = new SqliteCommand(initSqlQuery, connection);
