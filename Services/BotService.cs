@@ -77,17 +77,25 @@ public class BotService
                 {
                     if (userTodayMessagesCount >= currentUserLimit.Count)
                     {
-                        var timeHelper = new TimeHelper(_config.TimeZone);
-                        var untilDate = timeHelper.GetEndOfDayUtc();
+                        var currentUserChatInfo = await _bot.GetChatMember(update.Message.Chat.Id, update.Message.From.Id);
 
-                        await _bot.RestrictChatMember(
-                            chatId: update.Message.Chat.Id,
-                            userId: update.Message.From.Id,
-                            permissions: new ChatPermissions() { CanSendMessages = false },
-                            untilDate: untilDate
-                        );
+                        if (currentUserChatInfo is not ChatMemberRestricted and not ChatMemberOwner)
+                        {
+                            var timeHelper = new TimeHelper(_config.TimeZone);
+                            var untilDate = timeHelper.GetEndOfDayUtc();
 
-                        await _bot.SendMessage(chatId: update.Message.Chat.Id, text: $"User {update.Message.From.Username} reached message limit");
+                            await _bot.RestrictChatMember(
+                                chatId: update.Message.Chat.Id,
+                                userId: update.Message.From.Id,
+                                permissions: new ChatPermissions() { CanSendMessages = false },
+                                untilDate: untilDate
+                            );
+
+                            await _bot.SendMessage(
+                                chatId: update.Message.Chat.Id,
+                                text: $"Пользователь {update.Message.From.Username} исчерпал лимит сообщений!"
+                            );
+                        }
                     }
                 }
             }
