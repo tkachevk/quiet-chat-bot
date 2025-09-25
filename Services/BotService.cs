@@ -6,6 +6,7 @@ using Telegram.Bot.Types;
 using QuietChatBot.Repositories;
 using QuietChatBot.Helpers;
 using QuietChatBot.Models;
+using Serilog;
 
 public class BotService
 {
@@ -31,6 +32,8 @@ public class BotService
         Update update,
         CancellationToken ct)
     {
+        Log.Information("New update");
+
         if (update.Message != null)
         {
             if (update.Message.Text != null && update.Message.Text.StartsWith("/limit"))

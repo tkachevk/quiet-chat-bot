@@ -7,16 +7,22 @@ using QuietChatBot.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using QuietChatBot.Repositories;
+using Serilog;
 
 class Program
 {
     static async Task Main(string[] args)
     {
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.File("bot.log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
         var builder = Host.CreateApplicationBuilder(args);
 
         builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true);
         builder.Services.Configure<AppConfig>(builder.Configuration);
-        
+
         builder.Services.AddSingleton<ITelegramBotClient>(sp =>
         {
             var cfg = sp.GetRequiredService<IOptions<AppConfig>>().Value;
@@ -30,7 +36,7 @@ class Program
         var app = builder.Build();
 
         DbInitializer.Initialize();
-        
+
         var botClient = app.Services.GetRequiredService<ITelegramBotClient>();
         var updateHandler = app.Services.GetRequiredService<IUpdateHandler>();
 
@@ -41,6 +47,8 @@ class Program
             receiverOptions: new ReceiverOptions(),
             cancellationToken: cts.Token
         );
+
+        Log.Information("Bot started");
 
         await app.RunAsync();
     }
