@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using QuietChatBot.Repositories;
 using Serilog;
+using QuietChatBot.Commands;
 
 class Program
 {
@@ -29,9 +30,12 @@ class Program
             return new TelegramBotClient(cfg.BotToken);
         });
         builder.Services.AddSingleton<BotService>();
+        builder.Services.AddSingleton<MessageHandlerService>();
         builder.Services.AddSingleton<IUpdateHandler, BotUpdateHandler>();
         builder.Services.AddScoped<LimitRepository>();
         builder.Services.AddScoped<MessageRepository>();
+
+        builder.Services.AddSingleton<IBotCommand, LimitCommand>();
 
         var app = builder.Build();
 
