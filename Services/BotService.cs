@@ -56,7 +56,7 @@ public class BotService
 
                 var messages = _messageRepository.GetAll();
 
-                var today = DateTime.Today;
+                var today = DateTime.Today.ToUniversalTime();
                 var tommorrow = today.AddDays(1);
 
                 var userTodayMessages = messages
