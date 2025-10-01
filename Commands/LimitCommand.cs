@@ -90,7 +90,7 @@ public class LimitCommand : IBotCommand
 
             await _bot.SendMessage(
                 chatId: chatId,
-                text: $"Лимит {count} для пользователя {userName} добавлен"
+                text: $"Лимит {count} для пользователя {userName} установлен"
             );
         }
     }

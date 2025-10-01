@@ -88,9 +88,16 @@ public class MessageHandlerService
 
                     await _bot.SendMessage(
                         chatId: message.Chat.Id,
-                        text: $"Пользователь {message.From.Username} исчерпал лимит сообщений. Лимит обнулен"
+                        text: $"Пользователь {message.From.Username} исчерпал лимит сообщений"
                     );
                 }
+            }
+            else if (currentUserLimit.Count - userTodayMessagesCount <= 3)
+            {
+                await _bot.SendMessage(
+                    chatId: message.Chat.Id,
+                    text: $"У пользователя {message.From.Username} скоро будет исчерпан лимит {currentUserLimit.Count}"
+                );
             }
         }
     }
