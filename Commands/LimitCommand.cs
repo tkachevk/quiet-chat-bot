@@ -22,10 +22,8 @@ public class LimitCommand : IBotCommand
         _messageRepository = messageRepository;
     }
 
-    public bool CanHandle(Telegram.Bot.Types.Message message)
-    {
-        return message.Text?.StartsWith("/limit") ?? false;
-    }
+    public bool CanHandle(Telegram.Bot.Types.Message message) =>
+        message.Text?.StartsWith("/limit") ?? false;
 
     public async Task HandleAsync(Telegram.Bot.Types.Message message, CancellationToken ct)
     {

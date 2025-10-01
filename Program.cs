@@ -34,6 +34,7 @@ class Program
         builder.Services.AddScoped<LimitRepository>();
         builder.Services.AddScoped<MessageRepository>();
         builder.Services.AddSingleton<IBotCommand, LimitCommand>();
+        builder.Services.AddSingleton<IBotCommand, HelpCommand>();
         builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=app.db"));
 
         var app = builder.Build();
