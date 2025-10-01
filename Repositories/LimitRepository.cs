@@ -1,67 +1,32 @@
 namespace QuietChatBot.Repositories;
 
+using Microsoft.EntityFrameworkCore;
 using QuietChatBot.Models;
-using QuietChatBot.Data;
 
 public class LimitRepository
 {
-    public List<Limit> GetAll()
+    private readonly AppDbContext _context;
+
+    public LimitRepository(AppDbContext context)
     {
-        var limits = new List<Limit>();
-
-        using var connection = Database.GetConnection();
-        connection.Open();
-
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT * FROM Limits;";
-
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
-        {
-            limits.Add(new Limit
-            {
-                LimitId = reader.GetInt32(0),
-                ChatId = reader.GetInt64(1),
-                UserId = reader.GetInt64(2),
-                Count = reader.GetInt32(3)
-            });
-        }
-
-        return limits;
+        _context = context;
     }
 
-    public void Add(Limit limit)
+    public async Task<IEnumerable<Limit>> GetAllAsync()
     {
-        using var connection = Database.GetConnection();
-        connection.Open();
-
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            INSERT INTO Limits (ChatId, UserId, Count)
-            VALUES ($chatId, $userId, $count);
-        ";
-
-        cmd.Parameters.AddWithValue("$chatId", limit.ChatId);
-        cmd.Parameters.AddWithValue("$userId", limit.UserId);
-        cmd.Parameters.AddWithValue("$count", limit.Count);
-
-        cmd.ExecuteNonQuery();
+        return await _context.Limits.ToListAsync();
     }
 
-    public void Delete(long userId, long chatId)
+    public async Task AddAsync(Limit limit)
     {
-        using var connection = Database.GetConnection();
-        connection.Open();
+        await _context.AddAsync(limit);
+        await _context.SaveChangesAsync();
+    }
 
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
-            DELETE FROM Limits
-            WHERE UserId = $userId AND ChatId = $chatId;
-        ";
-
-        cmd.Parameters.AddWithValue("$userId", userId);
-        cmd.Parameters.AddWithValue("$chatId", chatId);
-
-        cmd.ExecuteNonQuery();
+    public async Task DeleteAsync(long userId, long chatId)
+    {
+        var messagesToDelete = await _context.Limits
+            .Where(l => l.UserId == userId && l.ChatId == chatId)
+            .ExecuteDeleteAsync();
     }
 }

@@ -28,14 +28,14 @@ public class MessageHandlerService
 
     public async Task HandleMessageAsync(Message message, CancellationToken ct)
     {
-        _messageRepository.Add(new Models.Message()
+        await _messageRepository.AddAsync(new Models.Message()
         {
             ChatId = message.Chat.Id,
             UserId = message.From.Id,
             MessageSendDate = message.Date
         });
 
-        var messages = _messageRepository.GetAll();
+        var messages = await _messageRepository.GetAllAsync();
 
         var today = DateTime.Today.ToUniversalTime();
         var tommorrow = today.AddDays(1);
@@ -49,7 +49,7 @@ public class MessageHandlerService
 
         var userTodayMessagesCount = userTodayMessages.Count();
 
-        var limits = _limitRepository.GetAll();
+        var limits = await _limitRepository.GetAllAsync();
         var currentUserLimit = limits
             .Where(m => m.ChatId == message.Chat.Id
                 && m.UserId == message.From.Id).LastOrDefault();
@@ -84,7 +84,7 @@ public class MessageHandlerService
                         untilDate: untilDate
                     );
 
-                    _limitRepository.Delete(message.From.Id, message.Chat.Id);
+                    await _limitRepository.DeleteAsync(message.From.Id, message.Chat.Id);
 
                     await _bot.SendMessage(
                         chatId: message.Chat.Id,

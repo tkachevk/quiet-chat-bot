@@ -1,6 +1,5 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
-using QuietChatBot.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using QuietChatBot.Services;
@@ -9,6 +8,7 @@ using Microsoft.Extensions.Options;
 using QuietChatBot.Repositories;
 using Serilog;
 using QuietChatBot.Commands;
+using Microsoft.EntityFrameworkCore;
 
 class Program
 {
@@ -23,7 +23,6 @@ class Program
 
         builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true);
         builder.Services.Configure<AppConfig>(builder.Configuration);
-
         builder.Services.AddSingleton<ITelegramBotClient>(sp =>
         {
             var cfg = sp.GetRequiredService<IOptions<AppConfig>>().Value;
@@ -34,12 +33,17 @@ class Program
         builder.Services.AddSingleton<IUpdateHandler, BotUpdateHandler>();
         builder.Services.AddScoped<LimitRepository>();
         builder.Services.AddScoped<MessageRepository>();
-
         builder.Services.AddSingleton<IBotCommand, LimitCommand>();
+        builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite("Data Source=app.db"));
 
         var app = builder.Build();
 
-        DbInitializer.Initialize();
+        // db init
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.EnsureCreated();
+        }
 
         var botClient = app.Services.GetRequiredService<ITelegramBotClient>();
         var updateHandler = app.Services.GetRequiredService<IUpdateHandler>();

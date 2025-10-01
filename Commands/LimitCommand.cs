@@ -61,7 +61,7 @@ public class LimitCommand : IBotCommand
             return;
         }
 
-        var messages = _messageRepository.GetAll();
+        var messages = await _messageRepository.GetAllAsync();
 
         var userTodayMessages = messages
             .Where(m => m.ChatId == chatId
@@ -81,7 +81,7 @@ public class LimitCommand : IBotCommand
         }
         else
         {
-            _limitRepository.Add(new Limit()
+            await _limitRepository.AddAsync(new Limit()
             {
                 ChatId = chatId,
                 UserId = userId,
