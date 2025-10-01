@@ -2,6 +2,7 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using QuietChatBot.Services;
+using Serilog;
 
 public class BotUpdateHandler : IUpdateHandler
 {
@@ -19,7 +20,7 @@ public class BotUpdateHandler : IUpdateHandler
 
     public Task HandleErrorAsync(ITelegramBotClient bot, Exception ex, HandleErrorSource hes, CancellationToken ct)
     {
-        Console.WriteLine($"Error: {ex.Message}");
+        Log.Error(ex.Message);
         return Task.CompletedTask;
     }
 }
