@@ -60,24 +60,18 @@ public class MessageHandlerService
             {
                 var currentUserChatInfo = await _bot.GetChatMember(message.Chat.Id, message.From.Id);
                 var currentUserRestricted = currentUserChatInfo as ChatMemberRestricted;
-                var currentUserOwner = currentUserChatInfo as ChatMemberOwner;
-                var currentUserAdmin = currentUserChatInfo as ChatMemberAdministrator;
 
                 if (
-                    currentUserAdmin == null &&
-                    currentUserOwner == null &&
-                    (
-                        currentUserRestricted == null ||
-                        currentUserRestricted.CanSendAudios ||
-                        currentUserRestricted.CanSendDocuments ||
-                        currentUserRestricted.CanSendMessages ||
-                        currentUserRestricted.CanSendOtherMessages ||
-                        currentUserRestricted.CanSendPhotos ||
-                        currentUserRestricted.CanSendPolls ||
-                        currentUserRestricted.CanSendVideoNotes ||
-                        currentUserRestricted.CanSendVideos ||
-                        currentUserRestricted.CanSendVoiceNotes
-                    )
+                    currentUserRestricted == null ||
+                    currentUserRestricted.CanSendAudios ||
+                    currentUserRestricted.CanSendDocuments ||
+                    currentUserRestricted.CanSendMessages ||
+                    currentUserRestricted.CanSendOtherMessages ||
+                    currentUserRestricted.CanSendPhotos ||
+                    currentUserRestricted.CanSendPolls ||
+                    currentUserRestricted.CanSendVideoNotes ||
+                    currentUserRestricted.CanSendVideos ||
+                    currentUserRestricted.CanSendVoiceNotes
                 )
                 {
                     var timeHelper = new TimeHelper(_config.TimeZone);
