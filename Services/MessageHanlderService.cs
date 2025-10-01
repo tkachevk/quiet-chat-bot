@@ -59,8 +59,26 @@ public class MessageHandlerService
             if (userTodayMessagesCount >= currentUserLimit.Count)
             {
                 var currentUserChatInfo = await _bot.GetChatMember(message.Chat.Id, message.From.Id);
+                var currentUserRestricted = currentUserChatInfo as ChatMemberRestricted;
+                var currentUserOwner = currentUserChatInfo as ChatMemberOwner;
+                var currentUserAdmin = currentUserChatInfo as ChatMemberAdministrator;
 
-                if (currentUserChatInfo is not ChatMemberRestricted and not ChatMemberOwner)
+                if (
+                    currentUserAdmin == null &&
+                    currentUserOwner == null &&
+                    (
+                        currentUserRestricted == null ||
+                        currentUserRestricted.CanSendAudios ||
+                        currentUserRestricted.CanSendDocuments ||
+                        currentUserRestricted.CanSendMessages ||
+                        currentUserRestricted.CanSendOtherMessages ||
+                        currentUserRestricted.CanSendPhotos ||
+                        currentUserRestricted.CanSendPolls ||
+                        currentUserRestricted.CanSendVideoNotes ||
+                        currentUserRestricted.CanSendVideos ||
+                        currentUserRestricted.CanSendVoiceNotes
+                    )
+                )
                 {
                     var timeHelper = new TimeHelper(_config.TimeZone);
                     var untilDate = timeHelper.GetEndOfDayUtc();
@@ -72,9 +90,11 @@ public class MessageHandlerService
                         untilDate: untilDate
                     );
 
+                    _limitRepository.Delete(message.From.Id, message.Chat.Id);
+
                     await _bot.SendMessage(
                         chatId: message.Chat.Id,
-                        text: $"Пользователь {message.From.Username} исчерпал лимит сообщений!"
+                        text: $"Пользователь {message.From.Username} исчерпал лимит сообщений. Лимит обнулен"
                     );
                 }
             }

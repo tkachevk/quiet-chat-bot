@@ -47,4 +47,21 @@ public class LimitRepository
 
         cmd.ExecuteNonQuery();
     }
+
+    public void Delete(long userId, long chatId)
+    {
+        using var connection = Database.GetConnection();
+        connection.Open();
+
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            DELETE FROM Limits
+            WHERE UserId = $userId AND ChatId = $chatId;
+        ";
+
+        cmd.Parameters.AddWithValue("$userId", userId);
+        cmd.Parameters.AddWithValue("$chatId", chatId);
+
+        cmd.ExecuteNonQuery();
+    }
 }

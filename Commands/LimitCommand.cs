@@ -2,14 +2,17 @@ namespace QuietChatBot.Commands;
 
 using QuietChatBot.Models;
 using QuietChatBot.Repositories;
+using Telegram.Bot;
 
 public class LimitCommand : IBotCommand
 {
     private readonly LimitRepository _limitRepository;
+    private readonly ITelegramBotClient _bot;
 
-    public LimitCommand(LimitRepository limitRepository)
+    public LimitCommand(LimitRepository limitRepository, ITelegramBotClient bot)
     {
         _limitRepository = limitRepository;
+        _bot = bot;
     }
 
     public bool CanHandle(Telegram.Bot.Types.Message message)
@@ -19,15 +22,25 @@ public class LimitCommand : IBotCommand
 
     public async Task HandleAsync(Telegram.Bot.Types.Message message, CancellationToken ct)
     {
-        var count = message.Text!.Split(' ');
+        var splitCommand = message.Text!.Split(' ');
+
+        var chatId = message.Chat.Id;
+        var userId = message.From.Id;
+        var userName = message.From.Username;
+        var count = Int32.Parse(splitCommand[1]);
 
         var newLimit = new Limit()
         {
-            ChatId = message.Chat.Id,
-            UserId = message.From.Id,
-            Count = Int32.Parse(count[1])
+            ChatId = chatId,
+            UserId = userId,
+            Count = count
         };
 
         _limitRepository.Add(newLimit);
+
+        await _bot.SendMessage(
+            chatId: chatId,
+            text: $"Лимит {count} для пользователя {userName} добавлен"
+        );
     }
 }
